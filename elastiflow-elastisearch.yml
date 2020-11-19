@@ -1,0 +1,99 @@
+version: '3.8'
+services:
+  elastiflow-elasticsearch:
+    #image: bitnami/elasticsearch:latest
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.8.1
+    hostname: node1.elastiflow-elasticsearch.local
+    #domainname: node1.elastiflow-elasticsearch.local
+    #container_name: elastiflow-elasticsearch
+    #restart: 'no'
+    #ulimits:
+    #  memlock:
+    #    soft: -1
+    #    hard: -1
+    #  nofile:
+    #    soft: 131072
+    #    hard: 131072
+    #  nproc: 8192
+    #  fsize: -1
+    networks:
+      - traefik-public
+      - elastiflow-net
+    volumes:
+      # You will need to create the path and permissions on the local file system where Elasticsearch will store data.
+      # For example...
+      #   mkdir ./elastiflow_es && chown -R 1000:1000 ./elastiflow_es
+      - /storage/fs_halo/elastiflow_es:/usr/share/elasticsearch/data
+      #- /storage/fs_halo/elastiflow_es:/bitnami/elasticsearch/data
+      - /storage/fs_halo/log_es:/usr/share/elasticsearch/logs
+      #- /storage/fs_halo/elasticsearch.keystore:/usr/share/elasticsearch/config/elasticsearch.keystore
+      #- /storage/fs_halo/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+      #- ./elastic-certificates.p12:/usr/share/elasticsearch/config/elastic-certificates.p12
+      #- ./docker-data-volumes/elasticsearch:/usr/share/elasticsearch/data
+      #Ceph
+      #- /mnt/fs_halo:/usr/share/elasticsearch/data
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == worker
+      resources:
+        limits:
+          cpus: '1.0' # 50% of single CPU
+          memory: 2G
+      restart_policy:
+        condition: on-failure
+      labels:
+        - traefik.enable=true
+        - traefik.docker.network=traefik-public
+        - traefik.constraint-label=traefik-public
+        - traefik.http.routers.elastiflow-http.rule=Host(`elastiflow-elastisearch.hahalolo.com`)
+        - traefik.http.routers.elastiflow-http.entrypoints=http
+        - traefik.http.routers.elastiflowd-http.middlewares=https-redirect
+        - traefik.http.routers.elastiflow-https.rule=Host(`elastiflow-elastisearch.hahalolo.com`)
+        - traefik.http.routers.elastiflow-https.entrypoints=https
+        - traefik.http.routers.elastiflow-https.tls=true
+        - traefik.http.routers.elastiflow-https.middlewares=compress,security,cors
+        - traefik.http.services.elastiflow.loadbalancer.server.port=9200
+        #- com.docker.lb.hosts="elastiflow-elastisearch.hahalolo.com"
+        #- traefik.https.services.elastiflow.loadbalancer.server.port=9200
+    environment:
+      # JVM Heap size
+      #   - this should be at least 2GB for simple testing, receiving only a few flows per second.
+      #   - for production environments upto 31GB is recommended.
+        ES_JAVA_OPTS: '-Xms4g -Xmx4g'
+        cluster.name: elastiflow
+        bootstrap.memory_lock: 'true'
+        network.host: 0.0.0.0
+        http.port: 9200
+        discovery.type: 'single-node'
+        indices.query.bool.max_clause_count: 8192
+        search.max_buckets: 250000
+        action.destructive_requires_name: 'true'
+        ELASTIC_PASSWORD: 'hahalolo@2020'
+        xpack.security.enabled: 'true'
+        
+        action.destructive_requires_name: 'true'
+        reindex.remote.whitelist: '*:*'
+        
+        xpack.monitoring.enabled: 'true'
+        xpack.monitoring.collection.enabled: 'true'
+        xpack.monitoring.collection.interval: 30s
+        xpack.security.audit.enabled: 'false'
+
+        node.ml: 'false'
+        xpack.ml.enabled: 'false'
+
+        xpack.watcher.enabled: 'false'
+        xpack.ilm.enabled: 'true'
+        xpack.sql.enabled: 'true'
+        #ELASTIC_PASSWORD_FILE=/run/secrets/bootstrapPassword.txt
+        #KEYSTORE_PASSWORD: hahalolo@2020
+# ======================
+#       NETWORK
+# ======================
+networks:
+  traefik-public:
+    external: true
+  elastiflow-net:
+    external: true

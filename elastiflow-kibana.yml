@@ -1,0 +1,61 @@
+version: '3.8'
+services:
+  elastiflow-kibana:
+    image: docker.elastic.co/kibana/kibana:7.8.1
+    #container_name: elastiflow-kibana
+    #restart: 'no'
+    depends_on:
+      - elastiflow-elasticsearch
+    networks:
+      - traefik-public
+      - elastiflow-net
+    environment:
+      SERVER_HOST: 0.0.0.0
+      SERVER_PORT: 5601
+      SERVER_MAXPAYLOADBYTES: 8388608
+      ELASTICSEARCH_HOSTS: "http://elastiflow-elasticsearch_elastiflow-elasticsearch:9200"
+      ELASTICSEARCH_REQUESTTIMEOUT: 132000
+      ELASTICSEARCH_SHARDTIMEOUT: 120000
+      KIBANA_DEFAULTAPPID: "dashboard/653cf1e0-2fd2-11e7-99ed-49759aed30f5"
+      KIBANA_AUTOCOMPLETETIMEOUT: 3000
+      KIBANA_AUTOCOMPLETETERMINATEAFTER: 2500000
+      LOGGING_DEST: stdout
+      LOGGING_QUIET: 'false'
+      ELASTICSEARCH_USERNAME: "elastic"
+      ELASTICSEARCH_PASSWORD: "hahalolo@2020"
+
+ 
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == worker
+      resources:
+        limits:
+          cpus: '2.0' # 50% of single CPU
+          memory: 2G
+      restart_policy:
+        condition: on-failure
+      labels:
+        - traefik.enable=true
+        - traefik.docker.network=traefik-public
+        - traefik.constraint-label=traefik-public
+        - traefik.http.routers.elastiflow-kibana-http.rule=Host(`elastiflow-kibana.hahalolo.com`)
+        - traefik.http.routers.elastiflow-kibana-http.entrypoints=http
+        - traefik.http.routers.elastiflow-kibana-http.middlewares=https-redirect
+        - traefik.http.routers.elastiflow-kibana-https.rule=Host(`elastiflow-kibana.hahalolo.com`)
+        - traefik.http.routers.elastiflow-kibana-https.entrypoints=https
+        - traefik.http.routers.elastiflow-kibana-https.tls=true
+        - traefik.http.routers.elastiflow-kibana-https.middlewares=compress,security,cors
+        - traefik.http.services.elastiflow-kibana.loadbalancer.server.port=5601
+        #- com.docker.lb.hosts="elastiflow-elastisearch.hahalolo.com"
+        #- traefik.https.services.elastiflow.loadbalancer.server.port=9200
+  
+# ======================
+#       NETWORK
+# ======================
+networks:
+  traefik-public:
+    external: true
+  elastiflow-net:
+    external: true

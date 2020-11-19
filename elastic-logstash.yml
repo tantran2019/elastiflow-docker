@@ -1,0 +1,123 @@
+version: '3.8'
+
+services:
+  elastiflow-logstash:
+    #image: robcowart/elastiflow-logstash:4.0.1
+    image: ttranduytan/ubuntu:logstashsflow
+    #image: docker.elastic.co/logstash/logstash:7.10.0
+    #container_name: elastiflow-logstash
+    #restart: 'no'
+    ports:
+      - target: 2055
+        published: 2055
+        protocol: udp
+        mode: host
+      - target: 6343
+        published: 6343
+        protocol: udp
+        mode: host
+      - target: 4739
+        published: 4739
+        protocol: udp
+        mode: host
+    depends_on:
+      - elastiflow-elasticsearch
+    networks: 
+      - elastiflow-net
+      - traefik-public
+    #command: 
+      #- sudo /usr/share/logstash/bin/logstash-plugin install logstash-codec-sflow
+      #- sudo /usr/share/logstash/bin/logstash-plugin update logstash-codec-netflow
+      #- sudo /usr/share/logstash/bin/logstash-plugin update logstash-input-udp
+      #- sudo /usr/share/logstash/bin/logstash-plugin update logstash-input-tcp
+      #- sudo /usr/share/logstash/bin/logstash-plugin update logstash-filter-dns
+      #- sudo /usr/share/logstash/bin/logstash-plugin update logstash-filter-geoip
+    volumes:
+      - /storage/fs_halo/bitnami_logstash/pipelines.yml:/usr/share/logstash/config/pipelines.yml
+      - /storage/fs_halo/bitnami_logstash/logstash.yml:/usr/share/logstash/config/logstash.yml
+      - /storage/fs_halo/bitnami_logstash/elastiflow:/usr/share/logstash/elastiflow
+    environment:
+      # JVM Heap size - this MUST be at least 3GB (4GB preferred)
+      LS_JAVA_OPTS: '-Xms4g -Xmx4g'
+
+      # ElastiFlow global configuration
+      ELASTIFLOW_AGENT_ID: elastiflow
+      ELASTIFLOW_GEOIP_CACHE_SIZE: 16384
+      ELASTIFLOW_GEOIP_LOOKUP: 'true'
+      ELASTIFLOW_ASN_LOOKUP: 'true'
+      ELASTIFLOW_OUI_LOOKUP: 'false'
+      ELASTIFLOW_POPULATE_LOGS: 'true'
+      ELASTIFLOW_KEEP_ORIG_DATA: 'true'
+      ELASTIFLOW_DEFAULT_APPID_SRCTYPE: '__UNKNOWN'
+
+      # Name resolution option
+      ELASTIFLOW_RESOLVE_IP2HOST: 'false'
+      ELASTIFLOW_NAMESERVER: '127.0.0.1'
+      ELASTIFLOW_DNS_HIT_CACHE_SIZE: 25000
+      ELASTIFLOW_DNS_HIT_CACHE_TTL: 900
+      ELASTIFLOW_DNS_FAILED_CACHE_SIZE: 75000
+      ELASTIFLOW_DNS_FAILED_CACHE_TTL: 3600
+
+      #ELASTIFLOW_ES_HOST: 'node1.elastiflow-elasticsearch.local'
+      ELASTIFLOW_ES_HOST: 'elastiflow-elasticsearch'
+      ELASTIFLOW_ES_USER: 'elastic'
+      ELASTIFLOW_ES_PASSWD: 'hahalolo@2020'
+
+      ELASTIFLOW_NETFLOW_IPV4_PORT: 2055
+      ELASTIFLOW_NETFLOW_UDP_WORKERS: 2
+      ELASTIFLOW_NETFLOW_UDP_QUEUE_SIZE: 4096
+      ELASTIFLOW_NETFLOW_UDP_RCV_BUFF: 33554432
+
+      ELASTIFLOW_SFLOW_IPV4_PORT: 6343
+      ELASTIFLOW_SFLOW_UDP_WORKERS: 2
+      ELASTIFLOW_SFLOW_UDP_QUEUE_SIZE: 4096
+      ELASTIFLOW_SFLOW_UDP_RCV_BUFF: 33554432
+
+      ELASTIFLOW_IPFIX_UDP_IPV4_PORT: 4739
+      ELASTIFLOW_IPFIX_UDP_WORKERS: 2
+      ELASTIFLOW_IPFIX_UDP_QUEUE_SIZE: 4096
+      ELASTIFLOW_IPFIX_UDP_RCV_BUFF: 33554432
+ 
+    deploy:
+      replicas: 3
+      placement:
+        constraints:
+          - node.role == worker
+      resources:
+        limits:
+          cpus: '2.0' # 50% of single CPU
+          memory: 1G
+      restart_policy:
+        condition: on-failure
+    #labels:
+      #- traefik.enable=true
+      #- traefik.docker.network=traefik-public
+      #- traefik.docker.lbswarm=true # Which means that Traefik will not perform any kind of load balancing and will delegate this task to swarm
+      #- traefik.udp.routers.logstack.entrypoints=2055
+      #- traefik.constraint-label=traefik-public
+      #- traefik.udp.routers.logstack.service=logstack
+      #- traefik.udp.services.logstack.loadbalancer.server.port=2055
+      #- traefik.udp.routers.logtack.rule=Host(`elastiflow-logstack.hahalolo.com`)
+      #- traefik.enable=true
+      #- traefik.docker.network=traefik-public
+      #- traefik.udp.routers.netflow.entrypoints=netflowudp
+      #- traefik.udp.services.netflow.loadbalancer.server.port=2055
+      #traefik.tcp.routers.dnstcp.entrypoints=dnstcp
+      #traefik.tcp.routers.dnstcp.rule=HostSNI(`*`)
+      #traefik.tcp.services.dnstcp.loadbalancer.server.port=53
+      #  - traefik.udp.routers.logtack.entrypoints=udp
+        #- traefik.http.routers.elastiflow-kibana-http.middlewares=https-redirect
+        #- traefik.http.routers.elastiflow--kibana-https.rule=Host(`elastiflow-kibana.hahalolo.com`)
+        #- traefik.http.routers.elastiflow-kibana-https.entrypoints=https
+        #- traefik.http.routers.elastiflow-kibana-https.tls=true
+        #- traefik.http.routers.elastiflow-kibana-https.middlewares=compress,security,cors
+       # - traefik.udp.services.logtack.loadbalancer.server.port=2055
+  
+# ======================
+#       NETWORK
+# ======================
+networks:
+  traefik-public:
+    external: true
+  elastiflow-net:
+    external: true
