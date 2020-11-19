@@ -47,10 +47,10 @@ services:
         - traefik.enable=true
         - traefik.docker.network=traefik-public
         - traefik.constraint-label=traefik-public
-        - traefik.http.routers.elastiflow-http.rule=Host(`elastiflow-elastisearch.hahalolo.com`)
+        - traefik.http.routers.elastiflow-http.rule=Host(`elastisearch-${DOMAIN?Variable DOMAIN not set}`)
         - traefik.http.routers.elastiflow-http.entrypoints=http
         - traefik.http.routers.elastiflowd-http.middlewares=https-redirect
-        - traefik.http.routers.elastiflow-https.rule=Host(`elastiflow-elastisearch.hahalolo.com`)
+        - traefik.http.routers.elastiflow-https.rule=Host(`elastisearch-${DOMAIN?Variable DOMAIN not set}`)
         - traefik.http.routers.elastiflow-https.entrypoints=https
         - traefik.http.routers.elastiflow-https.tls=true
         - traefik.http.routers.elastiflow-https.middlewares=compress,security,cors

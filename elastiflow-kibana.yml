@@ -13,7 +13,7 @@ services:
       SERVER_HOST: 0.0.0.0
       SERVER_PORT: 5601
       SERVER_MAXPAYLOADBYTES: 8388608
-      ELASTICSEARCH_HOSTS: "http://elastiflow-elasticsearch_elastiflow-elasticsearch:9200"
+      ELASTICSEARCH_HOSTS: "http://elastiflow-elasticsearch:9200"
       ELASTICSEARCH_REQUESTTIMEOUT: 132000
       ELASTICSEARCH_SHARDTIMEOUT: 120000
       KIBANA_DEFAULTAPPID: "dashboard/653cf1e0-2fd2-11e7-99ed-49759aed30f5"
@@ -40,10 +40,10 @@ services:
         - traefik.enable=true
         - traefik.docker.network=traefik-public
         - traefik.constraint-label=traefik-public
-        - traefik.http.routers.elastiflow-kibana-http.rule=Host(`elastiflow-kibana.hahalolo.com`)
+        - traefik.http.routers.elastiflow-kibana-http.rule=Host(`kibana-${DOMAIN}`)
         - traefik.http.routers.elastiflow-kibana-http.entrypoints=http
         - traefik.http.routers.elastiflow-kibana-http.middlewares=https-redirect
-        - traefik.http.routers.elastiflow-kibana-https.rule=Host(`elastiflow-kibana.hahalolo.com`)
+        - traefik.http.routers.elastiflow-kibana-https.rule=Host(`kibana-${DOMAIN}`)
         - traefik.http.routers.elastiflow-kibana-https.entrypoints=https
         - traefik.http.routers.elastiflow-kibana-https.tls=true
         - traefik.http.routers.elastiflow-kibana-https.middlewares=compress,security,cors
