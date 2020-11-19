@@ -33,9 +33,9 @@ services:
       #- sudo /usr/share/logstash/bin/logstash-plugin update logstash-filter-dns
       #- sudo /usr/share/logstash/bin/logstash-plugin update logstash-filter-geoip
     volumes:
-      - /storage/fs_halo/bitnami_logstash/pipelines.yml:/usr/share/logstash/config/pipelines.yml
-      - /storage/fs_halo/bitnami_logstash/logstash.yml:/usr/share/logstash/config/logstash.yml
-      - /storage/fs_halo/bitnami_logstash/elastiflow:/usr/share/logstash/elastiflow
+      - /storage/logstash_config/pipelines.yml:/usr/share/logstash/config/pipelines.yml
+      - /storage/logstash_config/logstash.yml:/usr/share/logstash/config/logstash.yml
+      - /storage/logstash_config/elastiflow:/usr/share/logstash/elastiflow
     environment:
       # JVM Heap size - this MUST be at least 3GB (4GB preferred)
       LS_JAVA_OPTS: '-Xms4g -Xmx4g'
@@ -97,7 +97,7 @@ services:
       #- traefik.constraint-label=traefik-public
       #- traefik.udp.routers.logstack.service=logstack
       #- traefik.udp.services.logstack.loadbalancer.server.port=2055
-      #- traefik.udp.routers.logtack.rule=Host(`elastiflow-logstack.hahalolo.com`)
+      #- traefik.udp.routers.logtack.rule=Host(`logstash-${DOMAIN}`)
       #- traefik.enable=true
       #- traefik.docker.network=traefik-public
       #- traefik.udp.routers.netflow.entrypoints=netflowudp
@@ -107,7 +107,7 @@ services:
       #traefik.tcp.services.dnstcp.loadbalancer.server.port=53
       #  - traefik.udp.routers.logtack.entrypoints=udp
         #- traefik.http.routers.elastiflow-kibana-http.middlewares=https-redirect
-        #- traefik.http.routers.elastiflow--kibana-https.rule=Host(`elastiflow-kibana.hahalolo.com`)
+        #- traefik.http.routers.elastiflow--kibana-https.rule=Host(`logstash-${DOMAIN}`)
         #- traefik.http.routers.elastiflow-kibana-https.entrypoints=https
         #- traefik.http.routers.elastiflow-kibana-https.tls=true
         #- traefik.http.routers.elastiflow-kibana-https.middlewares=compress,security,cors
