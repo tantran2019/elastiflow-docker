@@ -1,0 +1,11 @@
+export NODE_ID=$(docker info -f '{{.Swarm.NodeID}}')
+export EMAIL=tan.td@
+export DOMAIN=traefik.abc.com
+export USERNAME=admin
+export ADMIN_USER=admin
+export ADMIN_PASSWORD=123456
+export HASHED_PASSWORD=$(openssl passwd -apr1 $ADMIN_PASSWORD)
+export SLACK_URL=https://hooks.slack.com/services/abc/abc
+export SLACK_CHANNEL=swarmprom
+export SLACK_USER=tan
+export SLACK_ICON=https://avatars3.githubusercontent.com/u/3380462
